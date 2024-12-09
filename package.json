@@ -1,0 +1,50 @@
+{
+    "name": "python-electron-app",
+    "version": "1.0.0",
+    "main": "src/electron/main.js",
+    "type": "commonjs",
+    "scripts": {
+        "prestart": "chmod +x scripts/start.sh",
+        "start": "bash ./scripts/start.sh",
+        "build": "bash ./scripts/build.sh"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.7"
+    },
+    "devDependencies": {
+        "electron": "^28.0.0",
+        "electron-builder": "^24.0.0"
+    },
+    "build": {
+        "appId": "com.example.python-electron-app",
+        "productName": "Python Electron App",
+        "files": [
+            "src/electron/**/*",
+            "src/static/**/*"
+        ],
+        "directories": {
+            "output": "dist",
+            "buildResources": "build"
+        },
+        "extraResources": [
+            {
+                "from": "dist/api",
+                "to": "api",
+                "filter": [
+                    "api*",
+                    "api.exe"
+                ]
+            }
+        ],
+        "mac": {
+            "category": "public.app-category.developer-tools"
+        },
+        "win": {
+            "target": "nsis"
+        },
+        "linux": {
+            "target": "AppImage",
+            "category": "Development"
+        }
+    }
+}

@@ -1,0 +1,22 @@
+appId: com.example.python-electron-app
+productName: Python Electron App
+directories:
+  output: dist
+  buildResources: build
+files:
+  - "src/electron/**/*"
+  - "src/static/**/*"
+  - "package.json"
+extraResources:
+  - from: "dist/api"
+    to: "api"
+    filter:
+      - "api*"
+mac:
+  target: dmg
+  category: public.app-category.developer-tools
+win:
+  target: nsis
+linux:
+  target: AppImage
+  category: Development
