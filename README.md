@@ -110,7 +110,6 @@ When building for production:
 ### Common Issues
 
 1. Port 8000 already in use:
-   - The application will attempt to kill existing processes on port 8000
    - You can manually kill the process: `lsof -ti:8000 | xargs kill -9`
 
 2. Server Connection Issues:

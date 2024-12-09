@@ -44,6 +44,10 @@ async def log_requests(request: Request, call_next):
     logger.debug(f"Response status: {response.status_code}")
     return response
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/api/quick-task")
 async def quick_task(request: Request):
     logger.debug(f"Quick task called from origin: {request.headers.get('origin')}")

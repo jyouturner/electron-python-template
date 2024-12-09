@@ -27,54 +27,6 @@ let pythonProcess = null;
 let mainWindow = null;
 let isStartingUp = false;
 
-// Helper function to check if port is in use
-async function isPortInUse(port) {
-    try {
-        const response = await fetch(`http://127.0.0.1:${port}/api/quick-task`);
-        return response.ok;
-    } catch (error) {
-        return false;
-    }
-}
-
-// Helper function to kill process on port
-async function killProcessOnPort(port) {
-    return new Promise((resolve, reject) => {
-        const command = process.platform === 'win32'
-            ? `netstat -ano | findstr :${port}`
-            : `lsof -i :${port} -t`;
-        
-        require('child_process').exec(command, (error, stdout) => {
-            if (error) {
-                log(`No process found on port ${port}`);
-                resolve();
-                return;
-            }
-
-            const pid = process.platform === 'win32'
-                ? stdout.split('\n')[0].split(' ').filter(Boolean).pop()
-                : stdout.trim();
-
-            if (pid) {
-                const killCommand = process.platform === 'win32'
-                    ? `taskkill /F /PID ${pid}`
-                    : `kill -9 ${pid}`;
-
-                require('child_process').exec(killCommand, (error) => {
-                    if (error) {
-                        log(`Error killing process: ${error}`);
-                        reject(error);
-                    } else {
-                        log(`Killed process ${pid} on port ${port}`);
-                        resolve();
-                    }
-                });
-            } else {
-                resolve();
-            }
-        });
-    });
-}
 
 async function startPythonServer() {
     if (isDev) {
@@ -82,7 +34,7 @@ async function startPythonServer() {
         // Don't kill it since start.sh manages it
         log('Development mode: checking if Python server is running...');
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/quick-task');
+            const response = await fetch('http://127.0.0.1:8000/health');
             if (response.ok) {
                 log('Development server is responding');
                 return;
@@ -179,7 +131,7 @@ async function waitForHealthCheck(resolve, reject) {
 
     const check = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/quick-task');
+            const response = await fetch('http://127.0.0.1:8000/health');
             if (response.ok) {
                 log('Server health check passed');
                 resolve();
@@ -214,7 +166,7 @@ async function createWindow() {
         log('Python server started, verifying health...');
         // Quick verification that server is responding
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/quick-task');
+            const response = await fetch('http://127.0.0.1:8000/health');
             if (!response.ok) {
                 throw new Error('Server health check failed');
             }
