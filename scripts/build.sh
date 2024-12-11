@@ -58,14 +58,19 @@ mac:
   category: public.app-category.developer-tools
 win:
   target: nsis
+  icon: "src/static/icon.ico"
 linux:
   target: AppImage
   category: Development
+  icon: "src/static/icon.png"
 EOF
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
 
 # Build Electron app
 echo "Building Electron application..."
-npm install
 npx electron-builder build --mac --win --linux
 
 echo "Build complete! Check the dist directory for the packaged applications."

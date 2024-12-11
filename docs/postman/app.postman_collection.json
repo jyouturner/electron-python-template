@@ -1,0 +1,171 @@
+{
+    "info": {
+        "name": "Python Scheduler API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/health",
+                "description": "Check if the API is running"
+            }
+        },
+        {
+            "name": "Reports",
+            "item": [
+                {
+                    "name": "Create Report",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/reports",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Report\",\n    \"created_by\": \"test_user\",\n    \"template\": \"<h1>Test Template</h1>\",\n    \"recipients\": [\"test@example.com\"],\n    \"meta\": {\"key\": \"value\"}\n}"
+                        },
+                        "description": "Create a new report"
+                    }
+                },
+                {
+                    "name": "Get Report",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/reports/{{report_id}}",
+                        "description": "Get a specific report by ID"
+                    }
+                },
+                {
+                    "name": "List Reports",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/reports",
+                        "description": "List all reports"
+                    }
+                },
+                {
+                    "name": "Update Report",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{base_url}}/api/reports/{{report_id}}",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Report\",\n    \"recipients\": [\"new@example.com\"]\n}"
+                        },
+                        "description": "Update an existing report"
+                    }
+                },
+                {
+                    "name": "Delete Report",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/api/reports/{{report_id}}",
+                        "description": "Delete a report"
+                    }
+                },
+                {
+                    "name": "Duplicate Report",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/reports/{{report_id}}/duplicate",
+                        "description": "Create a copy of an existing report"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Tasks",
+            "item": [
+                {
+                    "name": "Create Task",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/tasks",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Task\",\n    \"type\": \"report\",\n    \"report_id\": {{report_id}},\n    \"schedule\": \"*/15 * * * *\",\n    \"meta\": {\"key\": \"value\"}\n}"
+                        },
+                        "description": "Create a new task"
+                    }
+                },
+                {
+                    "name": "Get Task",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/tasks/{{task_id}}",
+                        "description": "Get a specific task by ID"
+                    }
+                },
+                {
+                    "name": "Update Task",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{base_url}}/api/tasks/{{task_id}}",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Task\",\n    \"schedule\": \"*/30 * * * *\"\n}"
+                        },
+                        "description": "Update an existing task"
+                    }
+                },
+                {
+                    "name": "Delete Task",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/api/tasks/{{task_id}}",
+                        "description": "Delete (deactivate) a task"
+                    }
+                },
+                {
+                    "name": "Get Report Tasks",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/reports/{{report_id}}/tasks",
+                        "description": "Get all tasks for a specific report"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        },
+        {
+            "key": "report_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "task_id",
+            "value": "1",
+            "type": "string"
+        }
+    ]
+}
