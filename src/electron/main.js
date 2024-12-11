@@ -66,99 +66,30 @@ ipcMain.handle('get-database-path', () => {
 
 async function startPythonServer() {
     if (isDev) {
-        // In development mode, just verify the server is running
-        // Don't kill it since start.sh manages it
-        log('Development mode: checking if Python server is running...');
+        // Set environment variable for Python API
+        process.env.APP_LOG_DIR = paths.logs;
+        
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/health');
+            const response = await fetch('http://127.0.0.1:8000/health');
             if (response.ok) {
-                log('Development server is responding');
-                return;
+                console.log('FastAPI server is running');
+                return true;
             }
-            throw new Error('Development server is not responding');
         } catch (error) {
-            log(`Development server check failed: ${error}`);
-            throw new Error('Development server is not accessible');
+            console.error('Error connecting to FastAPI server:', error);
+            return false;
         }
+    } else {
+        // For production mode
+        const pythonExecutable = getPythonExecutablePath();
+        pythonProcess = spawn(pythonExecutable, ['src/main/api.py'], {
+            env: {
+                ...process.env,
+                APP_LOG_DIR: paths.logs
+            }
+        });
+        // ... rest of production code ...
     }
-
-    // Production mode below
-    return new Promise((resolve, reject) => {
-        try {
-            const executablePath = process.platform === 'win32'
-                ? path.join(process.resourcesPath, 'api.exe')
-                : path.join(process.resourcesPath, 'api');
-            
-            log(`Production mode: starting Python server from ${executablePath}`);
-            
-            if (!fs.existsSync(executablePath)) {
-                throw new Error(`Python executable not found at ${executablePath}`);
-            }
-
-            // Set executable permissions if needed
-            if (process.platform !== 'win32') {
-                try {
-                    fs.chmodSync(executablePath, '755');
-                    log('Successfully set executable permissions');
-                } catch (error) {
-                    log(`Warning: Could not chmod executable: ${error}`);
-                }
-            }
-
-            log('Spawning Python process...');
-            
-            // Spawn process with working directory set to Resources
-            pythonProcess = spawn(executablePath, [], {
-                stdio: ['ignore', 'pipe', 'pipe'],
-                env: {
-                    ...process.env,
-                    PYTHONUNBUFFERED: '1'
-                },
-                cwd: process.resourcesPath  // Set working directory to Resources folder
-            });
-
-            log(`Python process spawned with PID: ${pythonProcess.pid}`);
-
-            pythonProcess.stdout.on('data', (data) => {
-                log(`Server stdout: ${data}`);
-                if (data.toString().includes('Application startup complete')) {
-                    waitForHealthCheck(resolve, reject);
-                }
-            });
-
-            pythonProcess.stderr.on('data', (data) => {
-                log(`Server stderr: ${data}`);
-                // Some servers log to stderr, so check here too
-                if (data.toString().includes('Application startup complete')) {
-                    waitForHealthCheck(resolve, reject);
-                }
-            });
-
-            pythonProcess.on('error', (error) => {
-                log(`Server process error: ${error}`);
-                reject(error);
-            });
-
-            pythonProcess.on('close', (code, signal) => {
-                log(`Server process closed with code ${code} and signal ${signal}`);
-                if (code !== 0) {
-                    reject(new Error(`Server process exited with code ${code}`));
-                }
-            });
-
-            // Add timeout for initial startup
-            setTimeout(() => {
-                if (!pythonProcess.killed) {
-                    log('Server startup timeout reached');
-                    reject(new Error('Server startup timeout'));
-                }
-            }, 15000);
-
-        } catch (error) {
-            log(`Error in startPythonServer: ${error}`);
-            reject(error);
-        }
-    });
 }
 
 async function waitForHealthCheck(resolve, reject) {

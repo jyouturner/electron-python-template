@@ -2,18 +2,33 @@ from fastapi import FastAPI, WebSocket, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import logging
+import os
+from datetime import datetime
 from src.database import db
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 
-# Setup logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
+def setup_logging(log_dir):
+    # Ensure log directory exists
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Create log file path with timestamp
+    log_file = os.path.join(log_dir, f'api_{datetime.now().strftime("%Y%m%d")}.log')
+    
+    # Setup logging configuration
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()  # This will still print to console
+        ]
+    )
+    return logging.getLogger(__name__)
+
+# Get log directory from environment variable or use default
+log_dir = os.getenv('APP_LOG_DIR', os.path.expanduser('~/ReportManager/logs'))
+logger = setup_logging(log_dir)
 
 app = FastAPI()
 

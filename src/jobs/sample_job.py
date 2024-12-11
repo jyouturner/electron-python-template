@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Add parent directory to Python path to import utils
 sys.path.append(str(Path(__file__).parent.parent))
-from jobs.utils.job_utils import log_progress
+from src.jobs.utils.job_utils import log_progress
 
 def main():
     try:

@@ -11,6 +11,9 @@ A template for building desktop applications using Electron as the frontend and 
 - Cross-platform support (macOS, Windows, Linux)
 - Development and production environment configurations
 - Build system for creating distributable applications
+- Tabbed interface for Reports, Tasks, and Settings management
+- Centralized data storage in user's home directory
+- Integrated logging system
 
 ## Prerequisites
 
@@ -26,10 +29,12 @@ A template for building desktop applications using Electron as the frontend and 
 ├── src/
 │   ├── electron/          # Electron application files
 │   │   ├── main.js        # Main electron process
-│   │   └── preload.js     # Preload script for IPC
+│   │   ├── preload.js     # Preload script for IPC
+│   │   └── renderer.js    # UI interaction logic
 │   ├── main/             # Python backend files
 │   │   └── api.py        # FastAPI server
 │   └── static/           # Static frontend files
+│       └── index.html    # Main application UI
 ├── scripts/
 │   ├── start.sh          # Development startup script
 │   └── build.sh          # Production build script
@@ -37,14 +42,27 @@ A template for building desktop applications using Electron as the frontend and 
 └── poetry.lock          # Python dependencies lock file
 ```
 
+## Application Data
+
+The application stores all data in the user's home directory:
+```
+~/ReportManager/
+    ├── database.sqlite    # SQLite database
+    └── logs/             # Application logs
+        ├── app.log       # Electron app logs
+        └── api_*.log     # API server logs
+```
+
 ## Setup
 
-1. Install Node.js dependencies:
+1.Install Node.js dependencies:
+
 ```bash
 npm install
 ```
 
-2. Install Python dependencies using Poetry:
+2.Install Python dependencies using Poetry:
+
 ```bash
 poetry install
 ```
@@ -58,6 +76,7 @@ npm start
 ```
 
 This will:
+
 1. Start the Python FastAPI server
 2. Launch the Electron application
 3. Enable hot-reloading for development
@@ -71,6 +90,7 @@ npm run build
 ```
 
 This will:
+
 1. Build the Python backend into a single executable using PyInstaller
 2. Package the Electron application with electron-builder
 3. Create platform-specific distributables in the `dist` folder
@@ -90,20 +110,40 @@ This will:
 - Manages Python server lifecycle
 - Handles both development and production environments
 - Provides WebSocket client implementation
+- Features a tabbed interface for different functionalities
+
+## Features
+
+### Reports Management
+
+- Create, read, update, and delete reports
+- Custom report templates
+- Report scheduling
+
+### Tasks Management
+
+- Create and manage scheduled tasks
+- Task status monitoring
+- Task execution history
+
+### Settings
+
+- View application data locations
+- System information
+- Configuration options
 
 ## API Endpoints
 
-- `GET /api/quick-task`: Example endpoint for quick tasks
-- `GET /api/start-long-task/{task_id}`: Initiates a long-running task
-- `WebSocket /ws`: WebSocket endpoint for real-time updates
-
-## Production Considerations
-
-When building for production:
-- The Python server is packaged as a single executable
-- The application handles server lifecycle management
-- Proper cleanup is implemented for application shutdown
-- Error handling and logging are configured for production use
+- `GET /api/reports`: List all reports
+- `POST /api/reports`: Create a new report
+- `GET /api/reports/{id}`: Get report details
+- `PUT /api/reports/{id}`: Update a report
+- `DELETE /api/reports/{id}`: Delete a report
+- `GET /api/tasks`: List all tasks
+- `POST /api/tasks`: Create a new task
+- `GET /api/tasks/{id}`: Get task details
+- `PUT /api/tasks/{id}`: Update a task
+- `DELETE /api/tasks/{id}`: Delete a task
 
 ## Troubleshooting
 
@@ -113,20 +153,14 @@ When building for production:
    - You can manually kill the process: `lsof -ti:8000 | xargs kill -9`
 
 2. Server Connection Issues:
-   - Check the logs in `~/Library/Application Support/python-electron-app/logs/main.log` (macOS)
+   - Check the logs in `~/ReportManager/logs/`
    - Verify the Python server is running using the system task manager
 
 ### Development Tips
 
 1. Logs can be found in:
-   - Development: `logs/main.log`
-   - Production: 
-     - macOS: `~/Library/Application Support/python-electron-app/logs/main.log`
-     - Windows: `%APPDATA%\python-electron-app\logs\main.log`
-
-2. To inspect the packaged application:
-   - macOS: Right-click the .app and select "Show Package Contents"
-   - Windows: Check the installation directory in Program Files
+   - Development: `~/ReportManager/logs/`
+   - Production: Same location as development
 
 ## Contributing
 
