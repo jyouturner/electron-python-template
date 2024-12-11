@@ -1,32 +1,68 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const fetch = require('node-fetch');
-const { spawn } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 
-// Set up custom log path
-const isDev = !app.isPackaged;
-const customLogPath = isDev 
-    ? path.join(__dirname, '../../logs') 
-    : path.join(app.getPath('userData'), 'logs');
-const logFile = path.join(customLogPath, 'main.log');
+// Add this near the top to define isDev
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
-// Ensure log directory exists
-if (!fs.existsSync(customLogPath)) {
-    fs.mkdirSync(customLogPath, { recursive: true });
+// Define app name and data directory
+const APP_NAME = 'ReportManager';
+const APP_DIR = path.join(os.homedir(), APP_NAME);
+
+// Ensure app directory exists
+if (!fs.existsSync(APP_DIR)) {
+    fs.mkdirSync(APP_DIR, { recursive: true });
 }
 
+// Set up paths for different data types
+const paths = {
+    database: path.join(APP_DIR, 'database.sqlite'),
+    logs: path.join(APP_DIR, 'logs'),
+};
+
+// Ensure logs directory exists
+if (!fs.existsSync(paths.logs)) {
+    fs.mkdirSync(paths.logs, { recursive: true });
+}
+
+// Set up logging
 function log(message) {
     const timestamp = new Date().toISOString();
     const logMessage = `${timestamp}: ${message}\n`;
+    const logFile = path.join(paths.logs, 'app.log');
     fs.appendFileSync(logFile, logMessage);
     console.log(message);
 }
+
+// Function to get app paths
+function getAppPaths() {
+    return {
+        root: APP_DIR,
+        database: paths.database,
+        logs: paths.logs
+    };
+}
+
+// Add IPC handlers for paths
+ipcMain.handle('get-app-paths', () => {
+    return getAppPaths();
+});
 
 let pythonProcess = null;
 let mainWindow = null;
 let isStartingUp = false;
 
+// Add this function to get the database directory
+function getDatabasePath() {
+    const userDataPath = app.getPath('userData');
+    return path.join(userDataPath, 'database.db');
+}
+
+// Optional: Add an IPC handler to expose the path to the renderer
+ipcMain.handle('get-database-path', () => {
+    return getDatabasePath();
+});
 
 async function startPythonServer() {
     if (isDev) {
@@ -34,7 +70,7 @@ async function startPythonServer() {
         // Don't kill it since start.sh manages it
         log('Development mode: checking if Python server is running...');
         try {
-            const response = await fetch('http://127.0.0.1:8000/health');
+            const response = await fetch('http://127.0.0.1:8000/api/health');
             if (response.ok) {
                 log('Development server is responding');
                 return;
@@ -131,7 +167,7 @@ async function waitForHealthCheck(resolve, reject) {
 
     const check = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8000/health');
+            const response = await fetch('http://127.0.0.1:8000/api/health');
             if (response.ok) {
                 log('Server health check passed');
                 resolve();
@@ -166,7 +202,7 @@ async function createWindow() {
         log('Python server started, verifying health...');
         // Quick verification that server is responding
         try {
-            const response = await fetch('http://127.0.0.1:8000/health');
+            const response = await fetch('http://127.0.0.1:8000/api/health');
             if (!response.ok) {
                 throw new Error('Server health check failed');
             }
@@ -253,6 +289,77 @@ ipcMain.handle('start-long-task', async (event, taskId) => {
     }
 });
 
+// Reports API handlers
+ipcMain.handle('list-reports', async () => {
+    const response = await fetch('http://127.0.0.1:8000/api/reports');
+    return await response.json();
+});
+
+ipcMain.handle('create-report', async (event, report) => {
+    const response = await fetch('http://127.0.0.1:8000/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report)
+    });
+    return await response.json();
+});
+
+ipcMain.handle('get-report', async (event, id) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/reports/${id}`);
+    return await response.json();
+});
+
+ipcMain.handle('update-report', async (event, id, report) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/reports/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report)
+    });
+    return await response.json();
+});
+
+ipcMain.handle('delete-report', async (event, id) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/reports/${id}`, {
+        method: 'DELETE'
+    });
+    return await response.json();
+});
+
+// Tasks API handlers
+ipcMain.handle('list-tasks', async () => {
+    const response = await fetch('http://127.0.0.1:8000/api/tasks');
+    return await response.json();
+});
+
+ipcMain.handle('create-task', async (event, task) => {
+    const response = await fetch('http://127.0.0.1:8000/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+    });
+    return await response.json();
+});
+
+ipcMain.handle('get-task', async (event, id) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/tasks/${id}`);
+    return await response.json();
+});
+
+ipcMain.handle('update-task', async (event, id, task) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+    });
+    return await response.json();
+});
+
+ipcMain.handle('delete-task', async (event, id) => {
+    const response = await fetch(`http://127.0.0.1:8000/api/tasks/${id}`, {
+        method: 'DELETE'
+    });
+    return await response.json();
+});
 
 app.whenReady().then(createWindow);
 

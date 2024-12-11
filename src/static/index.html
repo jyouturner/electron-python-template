@@ -2,27 +2,181 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>API Test Dashboard</title>
+    <title>Report Management Dashboard</title>
     <style>
-        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; padding-bottom: 50px; }
+        .section { margin-bottom: 30px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px; }
         .button-group { margin-bottom: 20px; }
-        button { margin: 10px; padding: 10px 20px; }
-        #output { 
-            border: 1px solid #ddd; 
-            padding: 10px; 
-            height: 300px; 
-            overflow-y: auto; 
+        button { margin: 5px; padding: 8px 16px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .action-buttons button { margin: 2px; padding: 4px 8px; }
+        .settings-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .settings-info p {
+            margin: 0 0 10px 0;
+            word-break: break-all;
+        }
+        .tabs {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 5px;
+            border-radius: 4px 4px 0 0;
+        }
+        .tab-button:hover {
+            background-color: #f0f0f0;
+        }
+        .tab-button.active {
+            border: 1px solid #ddd;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            background-color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-pane {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .info-content {
+            max-width: 1200px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>API Test Dashboard</h1>
-        <div class="button-group">
-            <button id="quickTaskBtn">Test Quick Task</button>
-            <button id="longTaskBtn">Test Long Task</button>
+        <h1>Report Management Dashboard</h1>
+        
+        <!-- Tab buttons -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="reports">Reports</button>
+            <button class="tab-button" data-tab="tasks">Tasks</button>
+            <button class="tab-button" data-tab="settings">Settings</button>
         </div>
-        <div id="output"></div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content active">
+            <div class="form-group">
+                <button id="newReportBtn">New Report</button>
+            </div>
+            <div id="reportForm" style="display: none;">
+                <h3>Create/Edit Report</h3>
+                <div class="form-group">
+                    <label for="reportName">Name:</label>
+                    <input type="text" id="reportName" required>
+                </div>
+                <div class="form-group">
+                    <label for="reportCreatedBy">Created By:</label>
+                    <input type="text" id="reportCreatedBy" required>
+                </div>
+                <div class="form-group">
+                    <label for="reportTemplate">Template:</label>
+                    <textarea id="reportTemplate"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reportRecipients">Recipients (comma-separated):</label>
+                    <input type="text" id="reportRecipients">
+                </div>
+                <button id="saveReportBtn">Save Report</button>
+                <button id="cancelReportBtn">Cancel</button>
+            </div>
+            <table id="reportsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Tasks Tab -->
+        <div id="tasks" class="tab-content">
+            <div class="form-group">
+                <button id="newTaskBtn">New Task</button>
+            </div>
+            <div id="taskForm" style="display: none;">
+                <h3>Create/Edit Task</h3>
+                <div class="form-group">
+                    <label for="taskName">Name:</label>
+                    <input type="text" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskType">Type:</label>
+                    <input type="text" id="taskType" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskSchedule">Schedule:</label>
+                    <input type="text" id="taskSchedule">
+                </div>
+                <div class="form-group">
+                    <label for="taskReportId">Report ID:</label>
+                    <input type="number" id="taskReportId">
+                </div>
+                <button id="saveTaskBtn">Save Task</button>
+                <button id="cancelTaskBtn">Cancel</button>
+            </div>
+            <table id="tasksTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Schedule</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="settings-info">
+                <h3>Application Paths</h3>
+                <p><strong>App Directory:</strong> <span id="appRoot">Loading...</span></p>
+                <p><strong>Database File:</strong> <span id="dbLocation">Loading...</span></p>
+                <p><strong>Log Files:</strong> <span id="logsLocation">Loading...</span></p>
+            </div>
+        </div>
+
+        <!-- Add this at the bottom of the container div, but before the closing </div> -->
+        <div class="info-pane">
+            <div class="info-content">
+                <span id="infoMessage">Ready</span>
+            </div>
+        </div>
     </div>
     <script src="../electron/renderer.js"></script>
 </body>
